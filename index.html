@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Amazark Corporation • Payout Manager</title>
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="color-scheme" content="dark" />
+</head>
+<body>
+
+  <!-- BOOT / LOADING -->
+  <div id="boot" class="boot show" aria-hidden="false">
+    <div class="bootCard">
+      <div class="bootTop">
+        <img class="bootLogo" alt="Amazark"
+          src="https://media.discordapp.net/attachments/1438227900984983575/1456038463055986910/content.png?format=webp&quality=lossless" />
+        <div class="bootText">
+          <div class="bootTitle">Amazark Corporation</div>
+          <div class="bootSub">Initializing payout systems…</div>
+        </div>
+      </div>
+
+      <div class="bootBar">
+        <div class="bootBarFill" id="bootFill"></div>
+      </div>
+
+      <div class="bootHint" id="bootHint">Starting UI…</div>
+      <div class="bootFine">Internal Tool • Staff Use Only</div>
+    </div>
+  </div>
+
+  <div class="bgGlow" aria-hidden="true"></div>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="overlay hidden" aria-hidden="true">
+    <div class="modal authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle" id="authTitle">Staff Login</div>
+          <div class="modalSub">Amazark Corporation • Authorized personnel only</div>
+        </div>
+        <div class="brandBadge">
+          <img alt="Amazark"
+            src="https://media.discordapp.net/attachments/1438227900984983575/1456038463055986910/content.png?format=webp&quality=lossless" />
+        </div>
+      </div>
+
+      <div class="authBody">
+        <div class="field">
+          <div class="lab">Email</div>
+          <input id="loginEmail" class="input" type="email" autocomplete="username" placeholder="admin@amazarkco.com" />
+        </div>
+
+        <div class="field">
+          <div class="lab">Password</div>
+          <input id="loginPass" class="input" type="password" autocomplete="current-password" placeholder="••••••••••••" />
+        </div>
+
+        <div id="loginError" class="alert danger hidden">
+          <div>
+            <div class="alertTitle">Login failed</div>
+            <div class="alertText">Invalid email or password.</div>
+          </div>
+          <button class="iconBtn" id="closeLoginError" type="button" title="Close">✕</button>
+        </div>
+
+        <button class="btn primary" id="loginBtn" type="button">Login</button>
+
+        <div class="authFoot">
+          This is a private internal tool. Access is logged locally on this device.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="app hidden">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="brand">
+        <img class="logo" alt="Amazark"
+          src="https://media.discordapp.net/attachments/1438227900984983575/1456038463055986910/content.png?format=webp&quality=lossless" />
+        <div class="brandText">
+          <div class="title">Amazark Corporation</div>
+          <div class="subtitle">Payout Manager</div>
+        </div>
+      </div>
+
+      <div class="topActions">
+        <div class="pill">
+          Total Unpaid:
+          <span class="pillNum"><span id="unpaidTotal">0</span> R$</span>
+        </div>
+
+        <button class="btn ghost" id="exportBtn" type="button">Export</button>
+        <button class="btn ghost" id="importBtn" type="button">Import</button>
+        <input id="importFile" type="file" accept="application/json" hidden />
+        <button class="btn ghost dangerOutline" id="wipeBtn" type="button">Wipe</button>
+
+        <div class="dividerV"></div>
+
+        <button class="btn danger" id="logoutBtn" type="button">Logout</button>
+      </div>
+    </header>
+
+    <!-- LAYOUT -->
+    <main class="layout">
+      <!-- LEFT PANEL -->
+      <aside class="panel left">
+        <div class="panelHeader">
+          <div class="panelTitle">Controls</div>
+          <div class="panelDesc">Search, filter, sort, create payouts.</div>
+        </div>
+
+        <div class="stack">
+          <div class="field">
+            <div class="lab">Search</div>
+            <input id="searchInput" class="input"
+              placeholder="Search Discord user, Roblox user, notes, status, amount…" />
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <div class="lab">Status</div>
+              <select id="statusFilter" class="select">
+                <option value="all">All</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="paid">Paid</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <div class="lab">Sort</div>
+              <select id="sortBy" class="select">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="amountHigh">Amount (High → Low)</option>
+                <option value="amountLow">Amount (Low → High)</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn primary" id="newBtn" type="button">+ New Payout</button>
+
+          <div class="miniStats">
+            <div class="miniCard">
+              <div class="k">Entries</div>
+              <div class="v" id="countAll">0</div>
+            </div>
+            <div class="miniCard">
+              <div class="k">Unpaid</div>
+              <div class="v" id="countUnpaid">0</div>
+            </div>
+            <div class="miniCard">
+              <div class="k">Paid</div>
+              <div class="v" id="countPaid">0</div>
+            </div>
+          </div>
+
+          <div class="noteBox">
+            <div class="noteTitle">Rates</div>
+            <div class="noteText">
+              Marketing: <b>1 = 2 R$</b><br />
+              Reach Outs: <b>1 = 25 R$</b><br />
+              Ticket Rating: <b>0–5 → 0–50 R$</b><br />
+              Affiliate: <b id="affiliateRateText">0 R$ each</b>
+            </div>
+          </div>
+
+          
+        </div>
+      </aside>
+
+      <!-- MAIN PANEL -->
+      <section class="panel main">
+        <div class="panelHeader">
+          <div class="panelTitle">Payouts</div>
+          <div class="panelDesc">Click a card to view full details and actions.</div>
+        </div>
+
+        <div id="toastHost" class="toastHost" aria-live="polite"></div>
+
+        <div id="emptyState" class="empty hidden">
+          <div class="emptyCard">
+            <div class="emptyTitle">No payouts yet</div>
+            <div class="emptyText">
+              Click <b>+ New Payout</b> to create your first entry.
+            </div>
+            <button class="btn primary" id="newBtn2" type="button">+ New Payout</button>
+          </div>
+        </div>
+
+        <div id="cards" class="cards"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- CREATE/EDIT MODAL -->
+  <div id="formOverlay" class="overlay hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle" id="formTitle">New Payout</div>
+          <div class="modalSub">Totals calculate automatically.</div>
+        </div>
+        <button class="iconBtn" id="closeFormBtn" type="button" title="Close">✕</button>
+      </div>
+
+      <form id="payoutForm" class="form">
+        <input type="hidden" id="editingId" value="" />
+
+        <div class="grid2">
+          <label class="field">
+            <span class="lab">Username</span>
+            <input id="discordUsername" class="input" placeholder="xdluxyy" required />
+          </label>
+
+          <label class="field">
+            <span class="lab">Roblox Username</span>
+            <input id="robloxUsername" class="input" placeholder="xdluxyy" required />
+            <span class="hint">Stored for record (avatar needs backend to fetch).</span>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="grid4">
+          <label class="field">
+            <span class="lab">Affiliate Count</span>
+            <input id="affiliateCount" class="input" type="number" min="0" step="1" value="0" />
+          </label>
+
+          <label class="field">
+            <span class="lab">Marketing Count</span>
+            <input id="marketingCount" class="input" type="number" min="0" step="1" value="0" />
+            <span class="hint">1 = 2 R$</span>
+          </label>
+
+          <label class="field">
+            <span class="lab">Ticket Log Rating</span>
+            <input id="ticketRating" class="input" type="number" min="0" max="5" step="1" value="0" />
+            <span class="hint">0–5</span>
+          </label>
+
+          <label class="field">
+            <span class="lab">Reach Outs</span>
+            <input id="reachCount" class="input" type="number" min="0" step="1" value="0" />
+            <span class="hint">1 = 25 R$</span>
+          </label>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <span class="lab">Total (Auto)</span>
+            <div class="totalRow">
+              <div class="totalBox">
+                <div class="totalLabel">Total</div>
+                <div class="totalValue"><span id="totalValue">0</span> R$</div>
+              </div>
+
+              <div class="fadeBox" id="fadeBox" aria-hidden="true">
+                <div class="fadeLabel">Breakdown</div>
+                <div class="fadeText" id="breakdownText">—</div>
+              </div>
+            </div>
+          </div>
+
+          <label class="field">
+            <span class="lab">Paid?</span>
+            <select id="status" class="select statusSelect unpaid">
+              <option value="unpaid" selected>Unpaid (RED)</option>
+              <option value="paid">Paid (GREEN)</option>
+              <option value="cancelled">Cancelled (AMBER)</option>
+            </select>
+            <span class="hint">Default is RED (Unpaid).</span>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="grid2">
+          <label class="field">
+            <span class="lab">Additional Notes</span>
+            <textarea id="notes" class="textarea" placeholder="Anything important…"></textarea>
+          </label>
+
+          
+          </div>
+        </div>
+
+        <div class="formActions">
+          <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn primary" id="submitBtn">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DETAILS MODAL -->
+  <div id="detailsOverlay" class="overlay hidden" aria-hidden="true">
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle" id="detailsTitle">Payout Details</div>
+          <div class="modalSub" id="detailsSub">—</div>
+        </div>
+        <button class="iconBtn" id="closeDetailsBtn" type="button" title="Close">✕</button>
+      </div>
+
+      <div class="details">
+        <div class="detailsTop">
+          <div class="profileHeader" id="profileHeader">
+            <div class="profileInitials" id="profileInitials">A</div>
+            <div class="profileNames">
+              <div class="profilePrimary" id="detailsRoblox">—</div>
+              <div class="profileSecondary" id="detailsDiscord">—</div>
+            </div>
+          </div>
+
+          <div class="detailsMeta">
+            <div class="bigLine">
+              <span class="tag unpaid" id="statusTag">UNPAID</span>
+              <span class="amountBig"><span id="detailsAmount">0</span> R$</span>
+            </div>
+
+            <div class="metaGrid">
+              <div class="metaItem"><div class="k">Created</div><div class="v" id="detailsCreated">—</div></div>
+              <div class="metaItem"><div class="k">Updated</div><div class="v" id="detailsUpdated">—</div></div>
+              <div class="metaItem"><div class="k">Roblox Username</div><div class="v" id="detailsRoblox2">—</div></div>
+              <div class="metaItem"><div class="k">Discord Username</div><div class="v" id="detailsDiscord2">—</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="metaGrid wideGrid">
+          <div class="metaItem"><div class="k">Affiliate Count</div><div class="v" id="dAffiliate">0</div></div>
+          <div class="metaItem"><div class="k">Marketing Count</div><div class="v" id="dMarketing">0</div></div>
+          <div class="metaItem"><div class="k">Reach Outs</div><div class="v" id="dReach">0</div></div>
+          <div class="metaItem"><div class="k">Ticket Rating</div><div class="v" id="dTicket">0</div></div>
+        </div>
+
+        <div class="notesBlock">
+          <div class="k">Notes</div>
+          <div class="v" id="dNotes">—</div>
+        </div>
+
+        <div class="detailsActions">
+          <button class="btn success" id="markPaidBtn" type="button">Paid</button>
+          <button class="btn danger" id="markCancelledBtn" type="button">Cancelled</button>
+          <button class="btn ghost" id="editBtn" type="button">Edit</button>
+          <button class="btn ghost dangerOutline" id="removeBtn" type="button">
+            <span class="trash">🗑</span> Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
